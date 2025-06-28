@@ -1,20 +1,22 @@
-#Script 1A No examples
+#Script 1A No examples for Cogito:3b
 Activity Prompt no example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity. 
-    It reads like this, Description: "description_text ".
-    You are interested in identifying the activity or activities of the participant.
-    Answer the question: 'Which activity or activities is the participant engaging in? 
+      "Enable deep thinking subroutine.
+      We provide you with a Description containing a participant's qualitative description of their current activity. 
+      It reads like this, Description: ", description_text, ".
+      You are interested in identifying the activity or activities of the participant.
+      Answer the question: 'Which activity or activities is the participant engaging in? 
     
-    Output Instructions:  
-    Provide in your answer the described activity or activities. 
-    Don't explain your answer. 
-    If more than one activity is described, mention all and separate them by ',' in the order they were mentioned in the Description.
-    The output should have the following format, where you insert your answer:
-    Activity: your answer "
+      Output Instructions:  
+      Provide in your answer a summary of the described activity or activities.  
+      Don't explain your answer. 
+      If more than one activity is described, mention all and separate them by a comma (',') in the order they were mentioned in the Description.
+      The output should have the following format, where you insert your answer:
+      Activity: 'answer' "
 
 Location Indicator no example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity. 
-    It reads like this, Description: "description_text ".
+    "Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
+    It reads like this, Description: ", description_text, ".
     You are interested in identifying whether the Description mentions a location.
     Could you answer the question: 'Where did the activity take place?'
     
@@ -22,11 +24,12 @@ Location Indicator no example:
     Your answer can only be 'Yes' or 'No',  nothing else. 
     Don't explain your answer. 
     The output should have the following format, where you insert your answer:
-    Location Indicator: Yes OR No "
+    Location Indicator: 'answer' "
 
 Location no example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity. 
-    It reads like this, Description: "description_text ".
+    "Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
+    It reads like this, Description: ", description_text, ".
     You have previously identified that the Description mentions a location or multiple locations. 
     You are interested in identifying where the activity took place.
     Answer the question: 'Where did the activity take place?'
@@ -35,32 +38,35 @@ Location no example:
     Provide in your answer one or multiple locations mentioned in the Description, nothing else. 
     Don't explain your answer.
     Multiple locations should be separated by a comma (',') and presented in the order in which each location is mentioned in the Description.
-    Location: your answer "
+    Location: 'answer' "
 People Indicator no example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity. 
-    It reads like this, Description: "description_text ".
+    "Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
+    It reads like this, Description: ", description_text, ".
     You are interested in whether the Description mentions other people than the author themself. 
     Could you answer the question: 'Are other people than the author mentioned in relation to the activity?'
     
     Output Instructions:  
     Your answer can only be 'Yes'  or 'No', nothing else. Don't explain your answer. 
     The output should have the following format, where you insert your answer:
-    People Indicator: Yes OR No "
+    People Indicator: 'answer' "
 
 Name Indicator no example: 
-      "We provide you with a Description containing a participant's qualitative description of their current activity. 
-      It reads like this, Description: "description_text ".
+      "Enable deep thinking subroutine.
+      We provide you with a Description containing a participant's qualitative description of their current activity. 
+      It reads like this, Description: ", description_text, ".
       You have previously indicated that the Description mentions someone other than the author. 
       Could you answer the question: 'What are the names of the other people or person described?'. 
       
       Output Instruction: 
       Your answer can only be 'Yes' or 'No', nothing else. Don't explain your answer.
       The output should have the following format, where you insert your answer:
-      Name Indicator: Yes OR No "
+      Name Indicator: 'answer' "
 
 Names no example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity.
-    It reads like this, Description: "description_text ".
+    "Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity.
+    It reads like this, Description: ", description_text, ".
     You have previously indicated that the Description mentions someone other than the author.
     You are interested in identifying the names of the other people or persons described. 
     Answer the question: 'What is the name or are the names of the other person or people described?'
@@ -69,10 +75,12 @@ Names no example:
     Your answer should be a name or multiple names mentioned in the Description, nothing else. 
     For each name not mentioned, answer 'not reported' instead of their name.
     Multiple names should be separated by a comma (',') and presented in the order each names is mentioned in the Description. 
-    Names: your answer "
+    Names: 'answer' "
 Relationship Label no example: 
-   "We provide you with a Description containing a participant's qualitative description of their current activity.
-    It reads like this, Description: "description_text ".
+   "
+    Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity.
+    It reads like this, Description: ", description_text, ".
     You have previously indicated that the Description mentions someone other than the author.
     You are interested in identifying the relationship between the author and each person mentioned.  
     Answer the question: 'What is or are the relationship/s of the author to the person or people mentioned?'
@@ -81,26 +89,29 @@ Relationship Label no example:
     Your answer should be one or multiple short relationship descriptions, nothing else. Don't explain your answer. 
     If the Description mentions multiple people, these should be separated by a comma (',') and presented in the order in which each person is mentioned in the Description. 
     If you cannot identify the relationship of the author to a person, answer 'not reported' instead of their relationship.
-    Relationship Label: your answer "
+    Relationship Labels: 'answer' "
 
 #Script 1B With examples
 Activity Prompt example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity. 
-    It reads like this, Description: "description_text ".
+    "
+    Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
+    It reads like this, Description: ", description_text, ".
     You are interested in identifying the activity or activities of the participant.
     Answer the question: 'Which activity or activities is the participant engaging in? 
     'Example: I was running to work (Activity: running to work)'
 
     Output Instructions:  
-    Provide in your answer the described activity or activities. 
+    Provide in your answer a summary of the described activity or activities. 
     Don't explain your answer. 
     If more than one activity is described, mention all and separate them by ',' in the order they were mentioned in the Description.
     The output should have the following format, where you insert your answer:
-    Activity: your answer "
+    Activity: 'answer' "
 
 Location Indicator example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity. 
-    It reads like this, Description: "description_text ".
+    "Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
+    It reads like this, Description: ", description_text, ".
     You are interested in identifying whether the Description mentions a location.
     Could you answer the question: 'Where did the activity take place?'
     'Example 1: I was at the grocery store (Location Indicator: Yes) 
@@ -110,10 +121,11 @@ Location Indicator example:
     Your answer can only be 'Yes' or 'No',  nothing else. 
     Don't explain your answer. 
     The output should have the following format, where you insert your answer:
-    Location Indicator: Yes OR No "
+    Location Indicator: 'answer' "
 
 Location example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity. 
+    "Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
     It reads like this, Description: "description_text ".
     You have previously identified that the Description mentions a location or multiple locations. 
     You are interested in identifying where the activity took place.
@@ -124,9 +136,10 @@ Location example:
     Provide in your answer one or multiple locations mentioned in the Description, nothing else. 
     Don't explain your answer.
     Multiple locations should be separated by a comma (',') and presented in the order in which each location is mentioned in the Description.
-    Location: your answer "
+    Location: 'answer' "
 People Indicator example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity. 
+    "Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
     It reads like this, Description: "description_text ".
     You are interested in whether the Description mentions other people than the author themself. 
     Could you answer the question: 'Are other people than the author mentioned in relation to the activity?'
@@ -136,11 +149,12 @@ People Indicator example:
     Output Instructions:  
     Your answer can only be 'Yes'  or 'No', nothing else. Don't explain your answer. 
     The output should have the following format, where you insert your answer:
-    People Indicator: Yes OR No "
+    People Indicator: 'answer' "
 
 Name Indicator example: 
-      "We provide you with a Description containing a participant's qualitative description of their current activity. 
-      It reads like this, Description: "description_text ".
+      "Enable deep thinking subroutine.
+      We provide you with a Description containing a participant's qualitative description of their current activity. 
+      It reads like this, Description: ", description_text, ".
       You have previously indicated that the Description mentions someone other than the author. 
       Could you answer the question: 'What are the names of the other people or person described?'. 
       'Example: “I was lunching with my friend Lara and my coworkers” (Name Indicator: Yes)' 
@@ -148,11 +162,12 @@ Name Indicator example:
       Output Instruction: 
       Your answer can only be 'Yes' or 'No', nothing else. Don't explain your answer.
       The output should have the following format, where you insert your answer:
-      Name Indicator: Yes OR No "
+      Name Indicator: 'answer' "
 
 Names example: 
-    "We provide you with a Description containing a participant's qualitative description of their current activity.
-    It reads like this, Description: "description_text ".
+    "Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity.
+    It reads like this, Description: ", description_text, ".
     You have previously indicated that the Description mentions someone other than the author.
     You are interested in identifying the names of the other people or persons described. 
     Answer the question: 'What is the name or are the names of the other person or people described?'
@@ -162,10 +177,11 @@ Names example:
     Your answer should be a name or multiple names mentioned in the Description, nothing else. 
     For each name not mentioned, answer 'not reported' instead of their name.
     Multiple names should be separated by a comma (',') and presented in the order each names is mentioned in the Description. 
-    Names: your answer "
+    Names: 'answer' "
 Relationship Label example: 
-   "We provide you with a Description containing a participant's qualitative description of their current activity.
-    It reads like this, Description: "description_text ".
+   "Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity.
+    It reads like this, Description: ", description_text, ".
     You have previously indicated that the Description mentions someone other than the author.
     You are interested in identifying the relationship between the author and each person mentioned.  
     Answer the question: 'What is or are the relationship/s of the author to the person or people mentioned?'
@@ -175,7 +191,7 @@ Relationship Label example:
     Your answer should be one or multiple short relationship descriptions, nothing else. Don't explain your answer. 
     If the Description mentions multiple people, these should be separated by a comma (',') and presented in the order in which each person is mentioned in the Description. 
     If you cannot identify the relationship of the author to a person, answer 'not reported' instead of their relationship.
-    Relationship Label: your answer "
+    Relationship Label: 'answer' "
 
 
 
