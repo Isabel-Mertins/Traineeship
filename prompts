@@ -10,7 +10,7 @@ Activity Prompt no example:
     Don't explain your answer. 
     If more than one activity is described, mention all and separate them by ',' in the order they were mentioned in the Description.
     The output should have the following format, where you insert your answer:
-    'Activity: 'answer' "
+    Activity: your answer "
 
 Location Indicator no example: 
     "We provide you with a Description containing a participant's qualitative description of their current activity. 
@@ -22,7 +22,7 @@ Location Indicator no example:
     Your answer can only be 'Yes' or 'No',  nothing else. 
     Don't explain your answer. 
     The output should have the following format, where you insert your answer:
-    Location Indicator: 'Yes OR No' "
+    Location Indicator: Yes OR No "
 
 Location no example: 
     "We provide you with a Description containing a participant's qualitative description of their current activity. 
@@ -35,7 +35,7 @@ Location no example:
     Provide in your answer one or multiple locations mentioned in the Description, nothing else. 
     Don't explain your answer.
     Multiple locations should be separated by a comma (',') and presented in the order in which each location is mentioned in the Description.
-    Location: 'answer' "
+    Location: your answer "
 People Indicator no example: 
     "We provide you with a Description containing a participant's qualitative description of their current activity. 
     It reads like this, Description: "description_text ".
@@ -45,7 +45,7 @@ People Indicator no example:
     Output Instructions:  
     Your answer can only be 'Yes'  or 'No', nothing else. Don't explain your answer. 
     The output should have the following format, where you insert your answer:
-    People Indicator: 'Yes OR No' "
+    People Indicator: Yes OR No "
 
 Name Indicator no example: 
       "We provide you with a Description containing a participant's qualitative description of their current activity. 
@@ -56,7 +56,7 @@ Name Indicator no example:
       Output Instruction: 
       Your answer can only be 'Yes' or 'No', nothing else. Don't explain your answer.
       The output should have the following format, where you insert your answer:
-      Name Indicator: 'Yes OR No' "
+      Name Indicator: Yes OR No "
 
 Names no example: 
     "We provide you with a Description containing a participant's qualitative description of their current activity.
@@ -69,7 +69,7 @@ Names no example:
     Your answer should be a name or multiple names mentioned in the Description, nothing else. 
     For each name not mentioned, answer 'not reported' instead of their name.
     Multiple names should be separated by a comma (',') and presented in the order each names is mentioned in the Description. 
-    Names: 'answer' "
+    Names: your answer "
 Relationship Label no example: 
    "We provide you with a Description containing a participant's qualitative description of their current activity.
     It reads like this, Description: "description_text ".
@@ -81,7 +81,7 @@ Relationship Label no example:
     Your answer should be one or multiple short relationship descriptions, nothing else. Don't explain your answer. 
     If the Description mentions multiple people, these should be separated by a comma (',') and presented in the order in which each person is mentioned in the Description. 
     If you cannot identify the relationship of the author to a person, answer 'not reported' instead of their relationship.
-    Relationship Label: 'answer' "
+    Relationship Label: your answer "
 
 #Script 1B With examples
 Activity Prompt example: 
@@ -96,7 +96,7 @@ Activity Prompt example:
     Don't explain your answer. 
     If more than one activity is described, mention all and separate them by ',' in the order they were mentioned in the Description.
     The output should have the following format, where you insert your answer:
-    'Activity: 'answer' "
+    Activity: your answer "
 
 Location Indicator example: 
     "We provide you with a Description containing a participant's qualitative description of their current activity. 
@@ -110,7 +110,7 @@ Location Indicator example:
     Your answer can only be 'Yes' or 'No',  nothing else. 
     Don't explain your answer. 
     The output should have the following format, where you insert your answer:
-    Location Indicator: 'Yes OR No' "
+    Location Indicator: Yes OR No "
 
 Location example: 
     "We provide you with a Description containing a participant's qualitative description of their current activity. 
@@ -124,7 +124,7 @@ Location example:
     Provide in your answer one or multiple locations mentioned in the Description, nothing else. 
     Don't explain your answer.
     Multiple locations should be separated by a comma (',') and presented in the order in which each location is mentioned in the Description.
-    Location: 'answer' "
+    Location: your answer "
 People Indicator example: 
     "We provide you with a Description containing a participant's qualitative description of their current activity. 
     It reads like this, Description: "description_text ".
@@ -136,7 +136,7 @@ People Indicator example:
     Output Instructions:  
     Your answer can only be 'Yes'  or 'No', nothing else. Don't explain your answer. 
     The output should have the following format, where you insert your answer:
-    People Indicator: 'Yes OR No' "
+    People Indicator: Yes OR No "
 
 Name Indicator example: 
       "We provide you with a Description containing a participant's qualitative description of their current activity. 
@@ -148,7 +148,7 @@ Name Indicator example:
       Output Instruction: 
       Your answer can only be 'Yes' or 'No', nothing else. Don't explain your answer.
       The output should have the following format, where you insert your answer:
-      Name Indicator: 'Yes OR No' "
+      Name Indicator: Yes OR No "
 
 Names example: 
     "We provide you with a Description containing a participant's qualitative description of their current activity.
@@ -162,7 +162,7 @@ Names example:
     Your answer should be a name or multiple names mentioned in the Description, nothing else. 
     For each name not mentioned, answer 'not reported' instead of their name.
     Multiple names should be separated by a comma (',') and presented in the order each names is mentioned in the Description. 
-    Names: 'answer' "
+    Names: your answer "
 Relationship Label example: 
    "We provide you with a Description containing a participant's qualitative description of their current activity.
     It reads like this, Description: "description_text ".
@@ -175,7 +175,7 @@ Relationship Label example:
     Your answer should be one or multiple short relationship descriptions, nothing else. Don't explain your answer. 
     If the Description mentions multiple people, these should be separated by a comma (',') and presented in the order in which each person is mentioned in the Description. 
     If you cannot identify the relationship of the author to a person, answer 'not reported' instead of their relationship.
-    Relationship Label: 'answer' "
+    Relationship Label: your answer "
 
 
 
