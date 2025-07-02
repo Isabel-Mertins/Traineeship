@@ -1,0 +1,333 @@
+'
+This script requires the applicant to 
+1. install ollamar on their own device, and
+2. to download the default model deepseek-r1:7b onto their own device. 
+Under model_used the model can be changed, examples are provided. 
+The code can also be looped over various different models
+'
+'
+Further the code runs best if you first install these packages before running the code: 
+'
+
+#################################################################################
+#####################.   Script Nr. 2   A  ######################################
+#         Structured Output without examples on big model                     #
+#################################################################################
+#################################################################################
+
+
+# Read data
+data <- read.csv("reallifedatacorrected.csv", header = TRUE)
+names(data)
+
+# Functions needed
+apply_prompt <- function(text, model , prompt, stream = F){
+  resp <- generate(model, prompt = text, system = prompt, stream = stream, temperature = 0)
+  resp_process(resp, "text")
+}
+
+split_answer <- function(response_test) {
+  response_test <- as.character(response_test)
+  parts <- strsplit(response_test, "</think>\n\n")[[1]]
+  thinking <- ""
+  answer <- ""
+  if (length(parts) >= 1) {
+    thinking <- gsub("^<think>\n*", "", parts[1])
+  }
+  if (length(parts) >= 2) {
+    answer <- parts[2]
+  }
+  thinking <- trimws(thinking)
+  answer <- trimws(answer)
+  return(list(thinking = thinking, answer = answer))
+}
+
+
+
+model_list <- c("deepseek-r1:7b") 
+
+for (model_used in model_list) {
+  cat("\n\n=== Running workflow with structured output for model:", model_used, "===\n\n")
+  test_connection()
+  
+  data <- read.csv("reallifedatacorrected.csv", header = TRUE)
+  
+  data$activity <- character(nrow(data))
+  data$explicit.location.indicator.chat <- character(nrow(data))
+  data$explicit.location.chat <- character(nrow(data))
+  data$explicit.people.indicator.chat <- character(nrow(data))
+  data$explicit.name.indicator.chat <- character(nrow(data))
+  data$explicit.names.chat <- character(nrow(data))
+  data$explicit.people.relation.chat <- character(nrow(data))
+  descriptions <- as.list(data$description)
+  
+  
+  #################     Extracting activity       #########################
+  for(i in seq_along(descriptions)) {
+    description_text <- descriptions[[i]]
+    description_name <- names(descriptions)[i]
+    setTimeLimit(elapsed = 180, transient = TRUE)
+    activity <- tryCatch({
+      prompt_activity <- paste0("
+      Enable deep thinking subroutine.
+      We provide you with a Description containing a participant's qualitative description of their current activity. 
+      It reads like this, Description: ", description_text, ".
+      You are interested in identifying the activity or activities of the participant.
+      Answer the question: 'Which activity or activities is the participant engaging in? 
+    
+      Output Instructions:  
+      Provide in your answer a summary of the described activity or activities.  
+      Don't explain your answer. 
+      If more than one activity is described, mention all and separate them by a comma (',') in the order they were mentioned in the Description.
+      The output should have the following format, where you insert your answer:
+      Activity: 'answer' "
+      )
+      apply_prompt(text = description_text,
+                   model = model_used,
+                   prompt = prompt_activity,
+                   stream = TRUE)
+    }, error = function(e) {
+      return("Activity: not reported")
+    })
+    setTimeLimit(elapsed = Inf, transient = TRUE)
+    activity <- split_answer(activity)
+    activity_components <- strsplit(activity$answer, "Activity: ")[[1]]
+    activity_components[1]
+    target_row <- which(data$description == description_text)
+    data$activity[target_row] <- activity_components[2]
+    cat("Finished", description_name, "\n")
+  }
+  
+  
+  
+  #################     Extracting location   Indicator    #########################
+  for(i in seq_along(descriptions)) {
+    description_text <- descriptions[[i]]
+    description_name <- names(descriptions)[i]
+    setTimeLimit(elapsed = 180, transient = TRUE)
+    location_present <- tryCatch({
+      prompt_location_1 <- paste0("
+    Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
+    It reads like this, Description: ", description_text, ".
+    You are interested in identifying whether the Description mentions a location.
+    Could you answer the question: 'Where did the activity take place?'
+    
+    Output Instructions:  
+    Your answer can only be 'Yes' or 'No',  nothing else. 
+    Don't explain your answer. 
+    The output should have the following format, where you insert your answer:
+    Location Indicator: 'answer' "
+      )
+      apply_prompt(text = description_text,
+                   model = model_used,
+                   prompt = prompt_location_1,
+                   stream = TRUE)
+    }, error = function(e) {
+      return("Location Indicator: No")
+    })
+    setTimeLimit(elapsed = Inf, transient = TRUE)
+    location_present <- split_answer(location_present)
+    location_components <- strsplit(location_present$answer, "Location Indicator: ")[[1]]
+    location_components[1]
+    target_row <- which(data$description == description_text)
+    data$explicit.location.indicator.chat[target_row] <- location_components[2]
+    cat("Finished", description_name, "\n")
+  }
+  
+  
+  
+  #################     Extracting Location       #########################
+  descriptions <- as.list(data$description[grepl("Yes", data$explicit.location.indicator.chat)])
+  for(i in seq_along(descriptions)) {
+    description_text <- descriptions[[i]]
+    description_name <- names(descriptions)[i]
+    setTimeLimit(elapsed = 180, transient = TRUE)
+    location <- tryCatch({
+      prompt_location_1 <- paste0("
+    Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
+    It reads like this, Description: ", description_text, ".
+    You have previously identified that the Description mentions a location or multiple locations. 
+    You are interested in identifying where the activity took place.
+    Answer the question: 'Where did the activity take place?'
+    
+    Output Instructions:  
+    Provide in your answer one or multiple locations mentioned in the Description, nothing else. 
+    Don't explain your answer.
+    Multiple locations should be separated by a comma (',') and presented in the order in which each location is mentioned in the Description.
+    The output should have the following format, where you insert your answer:
+    Location: 'answer' "
+      )
+      apply_prompt(text = description_text,
+                   model = model_used,
+                   prompt = prompt_location_1,
+                   stream = TRUE)
+    }, error = function(e) {
+      return("Location : not reported")
+    })
+    setTimeLimit(elapsed = Inf, transient = TRUE)
+    location <- split_answer(location)
+    location_fi_components <- strsplit(location$answer, "Location: ")[[1]]
+    location_fi_components[1]
+    target_row <- which(data$description == description_text)
+    data$explicit.location.chat[target_row] <- location_fi_components[2]
+    cat("Finished", description_name, "\n")
+  }
+  
+  
+  
+  
+  #################     Extracting People Indicator       #########################
+  descriptions <- as.list(data$description)
+  for(i in seq_along(descriptions)) {
+    description_text <- descriptions[[i]]
+    description_name <- names(descriptions)[i]
+    setTimeLimit(elapsed = 180, transient = TRUE)
+    people <- tryCatch({
+      prompt_people_1 <- paste0("
+    Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity. 
+    It reads like this, Description: ", description_text, ".
+    You are interested in whether the Description mentions other people than the author themself. 
+    Could you answer the question: 'Are other people than the author mentioned in relation to the activity?'
+    
+    Output Instructions:  
+    Your answer can only be 'Yes'  or 'No', nothing else. Don't explain your answer. 
+    The output should have the following format, where you insert your answer:
+    People Indicator: 'answer' "
+      )
+      apply_prompt(
+        text = description_text,
+        model = model_used,
+        prompt = prompt_people_1,
+        stream = TRUE
+      )
+    }, error = function(e) {
+      return("People Indicator: No")  
+    })
+    setTimeLimit(elapsed = Inf, transient = TRUE)
+    people <- split_answer(people)
+    people_components <- strsplit(people$answer, "People Indicator: ")[[1]]
+    people_indicator <- if (length(people_components) > 1) trimws(people_components[2]) else NA
+    target_row <- which(data$description == description_text)
+    if (length(target_row) > 0) {
+      data$explicit.people.indicator.chat[target_row] <- people_indicator
+    }
+    cat("Finished", description_name, "\n")
+  }
+  
+  #################     Extracting Name Indicator       #########################
+  descriptions2 <- as.list(data$description[grepl("Yes", data$explicit.people.indicator.chat)])
+  for(i in seq_along(descriptions2)) {
+    description_text <- descriptions2[[i]]
+    description_name <- names(descriptions2)[i]
+    setTimeLimit(elapsed = 180, transient = TRUE)
+    people2 <- tryCatch({
+      prompt_people_2 <- paste0("
+      Enable deep thinking subroutine.
+      We provide you with a Description containing a participant's qualitative description of their current activity. 
+      It reads like this, Description: ", description_text, ".
+      You have previously indicated that the Description mentions someone other than the author. 
+      'Does the Description mention at least one persons's name?'.
+      
+      Output Instruction: 
+      Your answer can only be 'Yes' or 'No', nothing else. Don't explain your answer.
+      The output should have the following format, where you insert your answer:
+      Name Indicator: 'answer' "
+      )
+      apply_prompt(text = description_text,
+                   model = model_used,
+                   prompt = prompt_people_2,
+                   stream = TRUE)
+    }, error = function(e) {
+      return("Name Indicator: No")
+    })
+    setTimeLimit(elapsed = Inf, transient = TRUE)
+    people2 <- split_answer(people2)
+    people_ti_components <- strsplit(people2$answer, "Name Indicator: ")[[1]]
+    people_ti_components[2]
+    target_row <- which(data$description == description_text)
+    data$explicit.name.indicator.chat[target_row] <- people_ti_components[2]
+    cat("Finished", description_name, "\n")
+  }
+  
+  #################     Extracting Names      #########################
+  descriptions2 <- as.list(data$description[grepl("Yes", data$explicit.people.indicator.chat)])
+  for(i in seq_along(descriptions2)) {
+    description_text <- descriptions2[[i]]
+    description_name <- names(descriptions2)[i]
+    setTimeLimit(elapsed = 180, transient = TRUE)
+    people2 <- tryCatch({
+      prompt_people_3 <- paste0("
+      Enable deep thinking subroutine.
+      We provide you with a Description containing a participant's qualitative description of their current activity.
+      It reads like this, Description: ", description_text, ".
+      You have previously indicated that the Description mentions someone other than the author.
+      You are interested in identifying the names of the other people or persons described. 
+      Answer the question: 'What is the name or are the names of the other person or people described?'
+
+      Output Instructions: 
+      Your answer should be a name or multiple names mentioned in the Description, nothing else. 
+      For each name not mentioned, answer 'not reported' instead of their name.
+      Multiple names should be separated by a comma (',') and presented in the order each names is mentioned in the Description. 
+      The output should have the following format, where you insert your answer:
+      Names: 'answer' "
+      )
+      apply_prompt(text = description_text,
+                   model = model_used,
+                   prompt = prompt_people_3,
+                   stream = TRUE)
+    }, error = function(e) {
+      return("Names: not reported")
+    })
+    setTimeLimit(elapsed = Inf, transient = TRUE)
+    people2 <- split_answer(people2)
+    people_ti_components <- strsplit(people2$answer, "Names: ")[[1]]
+    people_ti_components[2]
+    target_row <- which(data$description == description_text)
+    data$explicit.names.chat[target_row] <- people_ti_components[2]
+    cat("Finished", description_name, "\n")
+  }
+  
+  #################     Extracting Relationship label      #########################
+  descriptions2 <- as.list(data$description[grepl("[A-Za-z]", data$explicit.names.chat)])
+  for(i in seq_along(descriptions2)) {
+    description_text <- descriptions2[[i]]
+    description_name <- names(descriptions2)[i]
+    setTimeLimit(elapsed = 180, transient = TRUE)
+    people2 <- tryCatch({
+      prompt_people_4 <- paste0("
+    Enable deep thinking subroutine.
+    We provide you with a Description containing a participant's qualitative description of their current activity.
+    It reads like this, Description: ", description_text, ".
+    You have previously indicated that the Description mentions someone other than the author.
+    You are interested in identifying the relationship between the author and each person mentioned.  
+    Answer the question: 'What is or are the relationship/s of the author to the person or people mentioned?'
+    
+    Output Instructions: 
+    Your answer should list one or multiple short relationship labes, nothing else.Don't explain your answer. If you cannot identify someones name, substitute it with 'not reported'.
+    Your answer should be one or multiple short relationship descriptions, nothing else. Don't explain your answer. 
+    If the Description mentions multiple people, these should be separated by a comma (',') and presented in the order in which each person is mentioned in the Description. 
+    The output should have the following format, where you insert your answer:
+    Relationship Labels: 'answer' "
+      )
+      apply_prompt(text = description_text,
+                   model = model_used,
+                   prompt = prompt_people_4,
+                   stream = TRUE)
+    }, error = function(e) {
+      return("Relationship Labels: not reported")
+    })
+    setTimeLimit(elapsed = Inf, transient = TRUE)
+    people2 <- split_answer(people2)
+    people_ti_components <- strsplit(people2$answer, "Relationship Labels: ")[[1]]
+    people_ti_components[2]
+    target_row <- which(data$description == description_text)
+    data$explicit.people.relation.chat[target_row] <- people_ti_components[2]
+    cat("Finished", description_name, "\n")
+  }
+}
+data
+
+write.csv(data, file = "realdatafinale.csv")
