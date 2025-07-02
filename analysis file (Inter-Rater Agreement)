@@ -1,0 +1,414 @@
+################################################################
+################################################################
+###################### Inter-rater Agreement ###################
+########################   & other Results #####################
+################################################################
+################################################################
+#packages
+install.packages("psych")
+install.packages("textTinyR")
+library(textTinyR)
+library(psych)
+#datasets
+simple <- read.csv("location_results_cogito_3b-2.csv") #cogito testing data
+human <- read.csv("location.csv") #original testing data with human codes
+deep <- read.csv("location_results_deepseek-r1_7b.csv") #deepseek testing data
+#functions needed
+trim_single_quotes <- function(df, columns) {
+  for (col in columns) {
+    if (col %in% colnames(df)) {
+      df[[col]] <- gsub("'", "", df[[col]])
+    }
+  }
+  return(df)
+} #removes any '' from the responses
+clean_yes_no_values <- function(df, columns) {
+  for (col in columns) {
+    if (col %in% colnames(df)) {
+      df[[col]] <- ifelse(df[[col]] %in% c("Yes", "No"), df[[col]], NA)
+    }
+  }
+  return(df)
+} #removes any answer that is not yes or no
+replace_empty_with_NA <- function(df, cols) {
+  df[cols] <- lapply(df[cols], function(x) {
+    ifelse(x == "", "NA", x)
+  })
+  return(df)
+}
+
+
+
+####################################################################################
+###################### Preprocessing//Cleaning the LLM responses ###################
+####################################################################################
+#for cogito / simple
+simple <- trim_single_quotes(
+  simple,
+  c("explicit.location.indicator.chat", "explicit.people.indicator.chat", "explicit.name.indicator.chat", "activity",
+    "explicit.location.chat", "explicit.names.chat", "explicit.people.relation.chat")
+) #this removes any '' 
+cols_to_clean <- c("explicit.location.indicator.chat", "explicit.people.indicator.chat", "explicit.name.indicator.chat")
+simple <- clean_yes_no_values(simple, cols_to_clean) #this removes any answer that is not yes or no 
+#for deepseek / deep
+deep <- trim_single_quotes(
+  deep,
+  c("explicit.location.indicator.chat", "explicit.people.indicator.chat", "explicit.name.indicator.chat", "activity",
+    "explicit.location.chat", "explicit.names.chat", "explicit.people.relation.chat")
+)
+head(deep$explicit.location.indicator.chat) #check if ' has been removed
+cols_to_clean <- c("explicit.location.indicator.chat", "explicit.people.indicator.chat", "explicit.name.indicator.chat")
+deep <- clean_yes_no_values(deep, cols_to_clean) #this removes any answer that is not yes or no 
+
+####################################################################################
+###################### Inter-rater Agreement model & human   #######################
+####################################################################################
+###for cogito####
+#location indicator
+cohen.kappa(x = cbind(simple$explicit.location.indicator.chat, human$explicit.location.indicator.manual))
+#people indicator
+cohen.kappa(x = cbind(simple$explicit.people.indicator.chat, human$People.indicator.manual))
+#name indicator
+cohen.kappa(x = cbind(simple$explicit.name.indicator.chat, human$Name.indicator.manual)) #warning message:upper bound of CI exceedes 1
+###for deepseek####
+#location indicator
+cohen.kappa(x = cbind(deep$explicit.location.indicator.chat, human$explicit.location.indicator.manual))
+#people indicator
+cohen.kappa(x = cbind(deep$explicit.people.indicator.chat, human$People.indicator.manual))
+#name indicator
+cohen.kappa(x = cbind(deep$explicit.name.indicator.chat, human$Name.indicator.manual)) 
+
+
+
+####################################################################################
+###################### Inter-rater Agreement cogito & deepseek   ###################
+####################################################################################
+#location indicator
+cohen.kappa(x = cbind(deep$explicit.location.indicator.chat, simple$explicit.location.indicator.chat))
+#people indicator
+cohen.kappa(x = cbind(deep$explicit.people.indicator.chat, simple$explicit.people.indicator.chat))
+#name indicator
+cohen.kappa(x = cbind(deep$explicit.name.indicator.chat, simple$explicit.name.indicator.chat)) 
+
+
+
+
+####################################################################################
+###################### Real Life Data // Performance Data   ########################
+####################################################################################
+#data
+alyisa <- read.csv("realdatafinale.csv", header = TRUE)
+alyisa <- data.frame(alyisa[1:20, ]) #selects only the first 20 entries, the rest doesnt contain values 
+cols_to_fix <- c(names(alyisa)) 
+alyisa <- replace_empty_with_NA(alyisa, cols_to_fix) #this replaces all empty strings with NAs (needed for cosine similarity)
+
+####################################################################################
+###################### Preprocessing//Cleaning the LLM responses ###################
+####################################################################################
+alyisa <- trim_single_quotes(
+  alyisa,
+  c("explicit.location.indicator.chat", "explicit.people.indicator.chat", "explicit.name.indicator.chat", "activity",
+    "explicit.location.chat", "explicit.names.chat", "explicit.people.relation.chat")
+)
+cols_to_clean <- c("explicit.location.indicator.chat", "explicit.people.indicator.chat", "explicit.name.indicator.chat")
+alyisa <- clean_yes_no_values(alyisa, cols_to_clean) #this removes any answer that is not yes or no 
+
+
+
+####################################################################################
+###################### Inter-Rater Agreement between deepseek &  ###################    
+#####################               2 human coders               ###################    
+####################################################################################
+#location indicator
+loc <- cohen.kappa(
+  x = cbind(
+    alyisa$explicit.location.indicator_I, 
+    alyisa$explicit.location.indicator_alysha, 
+    alyisa$explicit.location.indicator.chat
+  ))
+print(loc, all = TRUE) #please note that the agreement between human coder 1 and 2 was exactly 1 
+#people indicator
+pep <- cohen.kappa(
+  x = cbind(alyisa$explicit.people.indicator_I, 
+  alyisa$explicit.people.indicator_alysha, 
+  alyisa$explicit.people.indicator.chat))
+print(pep, all = TRUE)#please note that the agreement between human coder 1 and 2 was exactly 1 
+#name indicator
+nam <- cohen.kappa(
+  x = cbind(alyisa$explicit.name.indicator_I, 
+            alyisa$explicit.name.indicator_alysha, 
+            alyisa$explicit.name.indicator.chat))
+print(nam, all = TRUE)#please note that the agreement between human coder 1 and 2 was exactly 1 
+
+
+
+####################################################################################
+####################################################################################
+###################### Cosine Word Similarity (pairwise)         ###################    
+####################################################################################
+####################################################################################
+
+#activity#
+sim_1_2_a <- COS_TEXT(text_vector1 = alyisa$Activity_I, 
+                    text_vector2 = alyisa$Activity_alysha, 
+                    separator = " ")
+sim_1_3_a <- COS_TEXT(text_vector1 = alyisa$Activity_I, 
+                    text_vector2 = alyisa$activity, 
+                    separator = " ")
+sim_2_3_a <- COS_TEXT(text_vector1 = alyisa$Activity_alysha, 
+                    text_vector2 = alyisa$activity, 
+                    separator = " ")
+'word similarity I & A activity'
+similarity_IA_a <- mean(sim_1_2_a)
+similarity_IA_a
+'word similarity I & D activity'
+similarity_ID_a <- mean(sim_1_3_a)
+similarity_ID_a
+'word similarity A & D activity'
+similarity_AD_a <- mean(sim_2_3_a)
+similarity_AD_a
+
+#location#
+sim_1_2_l <- COS_TEXT(text_vector1 = alyisa$explicit.location_I, 
+                    text_vector2 = alyisa$explicit.location_alysha, 
+                    separator = " ")
+sim_1_3_l <- COS_TEXT(text_vector1 = alyisa$explicit.location_I, 
+                    text_vector2 = alyisa$explicit.location.chat, 
+                    separator = " ")
+sim_2_3_l <- COS_TEXT(text_vector1 = alyisa$explicit.location_alysha, 
+                    text_vector2 = alyisa$explicit.location.chat, 
+                    separator = " ")
+'word similarity I & A location'
+similarity_IA_l <- mean(sim_1_2_l)
+similarity_IA_l
+'word similarity I & D location'
+similarity_ID_l <- mean(sim_1_3_l)
+similarity_ID_l
+'word similarity A & D location'
+similarity_AD_l <- mean(sim_2_3_l)
+similarity_AD_l
+
+#names#
+sim_1_2_n <- COS_TEXT(text_vector1 = alyisa$explicit.names_I, 
+                    text_vector2 = alyisa$explicit.names_alysha, 
+                    separator = " ")
+sim_1_3_n <- COS_TEXT(text_vector1 = alyisa$explicit.names_I, 
+                    text_vector2 = alyisa$explicit.names.chat, 
+                    separator = " ")
+sim_2_3_n <- COS_TEXT(text_vector1 = alyisa$explicit.names_alysha, 
+                    text_vector2 = alyisa$explicit.names.chat, 
+                    separator = " ")
+'word similarity I & A names'
+similarity_IA_n <- mean(sim_1_2_n)
+similarity_IA_n
+'word similarity I & D names'
+similarity_ID_n <- mean(sim_1_3_n)
+similarity_ID_n
+'word similarity A & D names'
+similarity_AD_n <- mean(sim_2_3_n)
+similarity_AD_n
+
+
+#relationship#
+sim_1_2_r <- COS_TEXT(text_vector1 = alyisa$relationship.label_I, 
+                    text_vector2 = alyisa$relationship.label_alysha, 
+                    separator = " ")
+sim_1_3_r <- COS_TEXT(text_vector1 = alyisa$relationship.label_I, 
+                    text_vector2 = alyisa$explicit.people.relation.chat, 
+                    separator = " ")
+sim_2_3_r <- COS_TEXT(text_vector1 = alyisa$relationship.label_alysha, 
+                    text_vector2 = alyisa$explicit.people.relation.chat, 
+                    separator = " ")
+'word similarity I & A relationship'
+similarity_IA_r <- mean(sim_1_2_r)
+similarity_IA_r
+'word similarity I & D relationship'
+similarity_ID_r <- mean(sim_1_3_r)
+similarity_ID_r
+'word similarity A & D relationship'
+similarity_AD_r <- mean(sim_2_3_r)
+similarity_AD_r
+
+
+
+
+####################################################################################
+####################################################################################
+###################### Conditional Percentage Agreement (Raw)   ####################    
+####################################################################################
+####################################################################################
+#location
+both_yes <- sum(alyisa$explicit.location.indicator_I == "Yes" & alyisa$explicit.location.indicator.chat == "Yes", na.rm = TRUE) 
+human_yes <- sum(alyisa$explicit.location.indicator_I == "Yes", na.rm = TRUE)
+prop <- both_yes / human_yes
+  'Proportion of times humans indicated location, deepseek as well'
+print(prop) 
+  'Proportion of times human indicated location, deepseek did not '
+print(1-prop) 
+  #opposite
+both_no <- sum(alyisa$explicit.location.indicator_I == "No" & alyisa$explicit.location.indicator.chat == "No", na.rm = TRUE) 
+human_no <- sum(alyisa$explicit.location.indicator_I == "No", na.rm = TRUE)
+prop <- both_no / human_no
+  'Proportion of times human indicated no location, deepseek as well'
+print(prop) 
+  'Proportion of times human indicated no location, deepseek did not '
+print(1-prop) 
+
+#people
+both_yes <- sum(alyisa$explicit.people.indicator_I == "Yes" & alyisa$explicit.people.indicator.chat == "Yes", na.rm = TRUE) 
+human_yes <- sum(alyisa$explicit.people.indicator_I == "Yes", na.rm = TRUE)
+prop <- both_yes / human_yes
+  'Proportion of times humans indicated social company, deepseek as well'
+print(prop) 
+  'Proportion of times human indicated social company, deepseek did not '
+print(1-prop) 
+  #opposite
+both_no <- sum(alyisa$explicit.people.indicator_I == "No" & alyisa$explicit.people.indicator.chat == "No", na.rm = TRUE) 
+human_no <- sum(alyisa$explicit.people.indicator_I == "No", na.rm = TRUE)
+prop <- both_no / human_no
+  'Proportion of times human indicated no location, deepseek as well'
+print(prop) 
+  'Proportion of times human indicated no location, deepseek did not '
+print(1-prop) 
+
+#names
+both_yes <- sum(alyisa$explicit.name.indicator_I == "Yes" & alyisa$explicit.name.indicator.chat == "Yes", na.rm = TRUE) 
+human_yes <- sum(alyisa$explicit.name.indicator_I == "Yes", na.rm = TRUE)
+prop <- both_yes / human_yes
+  'Proportion of times humans indicated names, deepseek as well'
+print(prop) 
+  'Proportion of times human indicated names, deepseek did not '
+print(1-prop) 
+  #opposite
+both_no <- sum(alyisa$explicit.name.indicator_I == "No" & alyisa$explicit.name.indicator.chat == "No", na.rm = TRUE) 
+human_no <- sum(alyisa$explicit.name.indicator_I == "No", na.rm = TRUE)
+prop <- both_no / human_no
+  'Proportion of times human indicated no name, deepseek as well'
+print(prop) 
+  'Proportion of times human indicated no name, deepseek did not '
+print(1-prop) 
+
+
+
+####################################################################################
+####################################################################################
+#################### Matrix Visualization of Cosine Similarity   ###################    
+####################################################################################
+####################################################################################
+#this creates a matrix
+similarity_matrix <- data.frame(
+  Category = c("Activity", "Location", "Names", "Relationship"),
+  Isabel_Alysha  = c(similarity_IA_a, similarity_IA_l, similarity_IA_n, similarity_IA_r),
+  Isabel_Deepseek = c(similarity_ID_a, similarity_ID_l, similarity_ID_n, similarity_ID_r),
+  Alysha_Deepseek = c(similarity_AD_a, similarity_AD_l, similarity_AD_n, similarity_AD_r)
+)
+similarity_matrix #this is the matrix as a table
+similarity_long <- reshape(similarity_matrix,
+                           varying = list(c("Isabel_Alysha", "Isabel_Deepseek", "Alysha_Deepseek")),
+                           v.names = "Similarity",
+                           timevar = "Pair",
+                           times = c("Isabel_Alysha", "Isabel_Deepseek", "Alysha_Deepseek"),
+                           direction = "long")
+rownames(similarity_long) <- NULL #this reshapes the matrix
+#####Cosine Similarity Heatmap###
+ggplot(similarity_long, aes(x = Pair, y = Category, fill = Similarity)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = sprintf("%.2f", Similarity)), color = "black", size = 4) +
+  scale_fill_gradientn(colors = c("#FFA07A", "#FFD700", "#9370DB", "#4B0082"),
+                       limits = c(0, 1),
+                       name = "Cosine Similarity") +
+  labs(title = "Cosine Similarity Heatmap", x = "Pairwise Comparison", y = "Contextual Information") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, color = "black"),      
+    axis.title = element_text(color = "black"),                   
+    axis.text = element_text(color = "black"),                    
+    legend.title = element_text(color = "black"),                
+    legend.text = element_text(color = "black")                   
+  )
+
+####################################################################################
+####################################################################################
+#################### Grouped Bar Chart for Testing Data.         ###################    
+####################################################################################
+####################################################################################
+#this creates a dataframe for kappas
+kappa_values <- data.frame(
+  Indicator = rep(c("Location", "Social Company", "Names"), 2),
+  Method = rep(c("cogito:3b", "deepseek-r1:7b"), each = 3),
+  Kappa = c(
+    cohen.kappa(x = cbind(simple$explicit.location.indicator.chat, human$explicit.location.indicator.manual))$kappa,
+    cohen.kappa(x = cbind(simple$explicit.people.indicator.chat, human$People.indicator.manual))$kappa,
+    cohen.kappa(x = cbind(simple$explicit.name.indicator.chat, human$Name.indicator.manual))$kappa,
+    cohen.kappa(x = cbind(deep$explicit.location.indicator.chat, human$explicit.location.indicator.manual))$kappa,
+    cohen.kappa(x = cbind(deep$explicit.people.indicator.chat, human$People.indicator.manual))$kappa,
+    cohen.kappa(x = cbind(deep$explicit.name.indicator.chat, human$Name.indicator.manual))$kappa
+  )
+)
+#this makes a grouped barchart
+ggplot(kappa_values, aes(x = Indicator, y = Kappa, fill = Method)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7, color = "black") +  
+  geom_text(aes(label = round(Kappa, 2)), 
+            position = position_dodge(width = 0.8), 
+            vjust = 1.5, size = 4, color = "black") +
+  scale_fill_manual(values = c("cogito:3b" = "#FFA07A", "deepseek-r1:7b" = "#9370DB")) + 
+  ylim(0, 1) +
+  labs(title = "Inter-Rater Agreement with Human Coder by Indicator and Model",
+       x = "Indicators",
+       y = "Cohen's Kappa",
+       fill = "Model") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    panel.grid = element_blank()  
+  ) + 
+  theme(
+    plot.title = element_text(hjust = 0.5, color = "black"),      
+    axis.title = element_text(color = "black"),                   
+    axis.text = element_text(color = "black"),                    
+    legend.title = element_text(color = "black"),                
+    legend.text = element_text(color = "black")                   
+  )
+
+####################################################################################
+####################################################################################
+#################### Bar Chart for Performance Data.             ###################    
+####################################################################################
+####################################################################################
+
+loc_kappas <- cohen.kappa(x = cbind(alyisa$explicit.location.indicator_alysha, 
+                                    alyisa$explicit.location.indicator.chat))$kappa
+pep_kappas <- cohen.kappa(x = cbind(alyisa$explicit.people.indicator_alysha, 
+                                    alyisa$explicit.people.indicator.chat))$kappa
+nam_kappas <- cohen.kappa(x = cbind(alyisa$explicit.name.indicator_alysha, 
+                                    alyisa$explicit.name.indicator.chat))$kappa
+
+kappa_all <- rbind(loc_kappas, pep_kappas, nam_kappas)
+
+kappa_df <- data.frame(
+  Indicator = c("Location", "Social Company", "Names"),
+  Kappa = as.numeric(kappa_all)
+)
+
+ggplot(kappa_df, aes(x = Indicator, y = Kappa, fill = Indicator)) +
+  geom_bar(stat = "identity", width = 0.6, color = "black") +
+  ylim(0, 1) +
+  scale_fill_manual(values = c("Location" = "#9370DB", "Names" = "plum", "Social Company" = "plum4")) +
+  geom_text(aes(label = round(Kappa, 2)), 
+            position = position_dodge(width = 0.8), 
+            vjust = 1.5, size = 4, color = "black") +
+  labs(title = "Inter-Rater Agreement Human Coders with deepseek-r1:7b",
+       y = "Cohen's Kappa",
+       x = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    panel.grid = element_blank()  
+  ) + 
+  theme(
+    plot.title = element_text(hjust = 0.5, color = "black"),      
+    axis.title = element_text(color = "black"),                   
+    axis.text = element_text(color = "black"),                    
+    legend.title = element_text(color = "black"),                
+    legend.text = element_text(color = "black")                   
+  )
