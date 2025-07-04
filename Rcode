@@ -1,1 +1,179 @@
+'This code creates a Shiny App application to visualize the dataset'
+
+
+#functions needed
+trim_single_quotes <- function(df, columns) {
+  for (col in columns) {
+    if (col %in% colnames(df)) {
+      df[[col]] <- gsub("'", "", df[[col]])
+    }
+  }
+  return(df)
+} #removes any '' from the responses
+clean_yes_no_values <- function(df, columns) {
+  for (col in columns) {
+    if (col %in% colnames(df)) {
+      df[[col]] <- ifelse(df[[col]] %in% c("Yes", "No"), df[[col]], NA)
+    }
+  }
+  return(df)
+} #removes any answer that is not yes or no
+replace_empty_with_NA <- function(df, cols) {
+  df[cols] <- lapply(df[cols], function(x) {
+    ifelse(x == "", "NA", x)
+  })
+  return(df)
+}
+
+
+####################################################################################
+###################### Loading Data and Cleaning the LLM responses #################
+####################################################################################
+alyisa <- read.csv("realdatafinale.csv", header = TRUE)
+alyisa <- data.frame(alyisa[1:20, ]) #selects only the first 20 entries, the rest doesnt contain values 
+cols_to_fix <- c(names(alyisa)) 
+alyisa <- replace_empty_with_NA(alyisa, cols_to_fix) #this replaces all empty strings with NAs (needed for cosine similarity)
+alyisa <- trim_single_quotes(
+  alyisa,
+  c("explicit.location.indicator.chat", "explicit.people.indicator.chat", "explicit.name.indicator.chat", "activity",
+    "explicit.location.chat", "explicit.names.chat", "explicit.people.relation.chat")
+)
+cols_to_clean <- c("explicit.location.indicator.chat", "explicit.people.indicator.chat", "explicit.name.indicator.chat")
+alyisa <- clean_yes_no_values(alyisa, cols_to_clean) #this removes any answer that is not yes or no 
+head(alyisa)
+
+
+
+install_and_load <- function(packages) {
+  new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+  if(length(new_packages)) install.packages(new_packages)
+  invisible(lapply(packages, library, character.only = TRUE))
+}
+install_and_load(c("shiny", "DT", "dplyr"))
+  
+
+####################################################################################
+###################### Creating the Shiny App                     #################
+####################################################################################
+
+data <- tibble(
+  `Participant Text` = alyisa$description,
+  
+  `Activity (Isabel)` = alyisa$Activity_I,
+  `Activity (Alysha)` = alyisa$Activity_alysha,
+  `Activity (deepseek)` = alyisa$activity,
+  
+  `Location Indicator (Isabel)` = alyisa$explicit.location.indicator_I,
+  `Location Indicator (Alysha)` = alyisa$explicit.location.indicator_alysha,
+  `Location Indicator (deepseek)` = alyisa$explicit.location.indicator.chat,
+  
+  `Location (Isabel)` = alyisa$explicit.location_I,
+  `Location (Alysha)` = alyisa$explicit.location_alysha,
+  `Location (deepseek)` = alyisa$explicit.location.chat,
+  
+  `Social Company Indicator (Isabel)` = alyisa$explicit.people.indicator_I,
+  `Social Company Indicator (Alysha)` = alyisa$explicit.people.indicator_alysha,
+  `Social Company Indicator (deepseek)` = alyisa$explicit.people.indicator.chat,
+  
+  `Names (Isabel)` = alyisa$explicit.names_I,
+  `Names (Alysha)` = alyisa$explicit.names_alysha,
+  `Names (deepseek)` = alyisa$explicit.names.chat,
+  
+  `Name Indicator (Isabel)` = alyisa$explicit.name.indicator_I,
+  `Name Indicator (Alysha)` = alyisa$explicit.name.indicator_alysha,
+  `Name Indicator (deepseek)` = alyisa$explicit.name.indicator.chat,
+  
+  `Relationship (Isabel)` = alyisa$relationship.label_I,
+  `Relationship (Alysha)` = alyisa$relationship.label_alysha,
+  `Relationship (deepseek)` = alyisa$explicit.people.relation.chat
+)
+
+ui <- fluidPage(
+  titlePanel("Explore the Dataset"),
+  
+  tags$style(HTML("
+    table.dataTable tbody td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+    table.dataTable tbody td:hover {
+      overflow: visible;
+      white-space: normal;
+      background-color: #f0f0f0;
+      z-index: 1000;
+    }
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+      margin-bottom: 10px;
+    }
+  ")),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("coder", "Select coder:", choices = c("Isabel", "Alysha", "deepseek")),
+      uiOutput("dynamicFilters")
+    ),
+    
+    mainPanel(
+      DTOutput("filteredTable")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+    output$dynamicFilters <- renderUI({
+    req(input$coder)
+    coder <- input$coder
+    
+    loc_col <- paste0("Location Indicator (", coder, ")")
+    soc_col <- paste0("Social Company Indicator (", coder, ")")
+    name_col <- paste0("Name Indicator (", coder, ")")
+    
+    tagList(
+      selectInput("location_filter", "Filter by Location Indicator:",
+                  choices = c("All", unique(na.omit(data[[loc_col]])))),
+      selectInput("social_filter", "Filter by Social Company Indicator:",
+                  choices = c("All", unique(na.omit(data[[soc_col]])))),
+      selectInput("name_filter", "Filter by Name Indicator:",
+                  choices = c("All", unique(na.omit(data[[name_col]]))))
+    )
+  })
+  
+  filteredData <- reactive({
+    req(input$coder)
+    df <- data
+    coder <- input$coder
+    
+    loc_col <- paste0("Location Indicator (", coder, ")")
+    soc_col <- paste0("Social Company Indicator (", coder, ")")
+    name_col <- paste0("Name Indicator (", coder, ")")
+    
+    if (!is.null(input$location_filter) && input$location_filter != "All") {
+      df <- df %>% filter(.data[[loc_col]] == input$location_filter)
+    }
+    
+    if (!is.null(input$social_filter) && input$social_filter != "All") {
+      df <- df %>% filter(.data[[soc_col]] == input$social_filter)
+    }
+    
+    if (!is.null(input$name_filter) && input$name_filter != "All") {
+      df <- df %>% filter(.data[[name_col]] == input$name_filter)
+    }
+    
+    return(df)
+  })
+  
+  output$filteredTable <- renderDT({
+    datatable(
+      filteredData(),
+      options = list(pageLength = 10, scrollX = TRUE),
+      escape = FALSE
+    )
+  })
+}
+shinyApp(ui = ui, server = server)
+
+
 
