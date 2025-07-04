@@ -8,5 +8,6 @@ It contains the following documents:
 3. Temperature paramters are set to 0, the user, therefore,
    should reach the same conclusions) Note. installing each LLM using Ollama is required to run the code
 4. Manual codebook (contains the instructions to the manual coder)
-5. ShinyApp (The final application was tested on a pseudo-anonymized dataset. To give the user a better experience of the results i provide and interactive table)
+5. Interrater Agreement (can be run to recreate my entire analysis)
+6. ShinyApp (The final application was tested on a pseudo-anonymized dataset. To give the user a better experience of the results i provide and interactive table)
    
